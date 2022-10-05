@@ -128,5 +128,9 @@ dmypy.json
 # Pyre type checker
 .pyre/
 
-# idea
+# customize
 .idea/
+dev/
+logs/
+checkpoints/
+*.jpg
