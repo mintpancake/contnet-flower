@@ -130,3 +130,7 @@ dmypy.json
 
 # idea
 .idea/
+dev/
+logs/
+checkpoints/
+*.jpg
