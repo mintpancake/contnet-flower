@@ -24,5 +24,6 @@ training set std: `[0.2758, 0.2501, 0.2555]`
 - Dependencies: 
   - Follow HKU CS GPU Farm Tutorial page 8
   - See ./env.yaml
+  - Update env `conda env update -f env.yaml`
 - Clone issue: 
   - See [创建个人访问令牌](https://docs.github.com/cn/authentication/keeping-your-account-and-data-secure/creating-a-personal-access-token)
