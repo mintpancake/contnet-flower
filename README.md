@@ -1,6 +1,17 @@
 # ConTNet Flower
 An implementation of ConTNet on the Oxford 17 Category Flower Dataset
 
+## Useful Statistics
+training set mean: `[0.4256, 0.4259, 0.2790]`
+training set std: `[0.2758, 0.2501, 0.2555]`
+
+## Data Preparation
+- Train(90%)/Test(10%) split:
+  1. Extract dataset into `data/flowers/raw`
+  2. Run `data/flowers/raw/_split.py`
+  3. Run `data/flowers/raw/_generate_meta.py`
+  - Please double check with me that our splits are identical
+
 ## Dev Instructions
 - Workflow:
   1. Checkout a new branch from `main` (Do not work on `main`)

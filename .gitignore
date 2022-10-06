@@ -134,3 +134,4 @@ dev/
 logs/
 checkpoints/
 *.jpg
+*dev*.py
