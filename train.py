@@ -5,7 +5,7 @@ from torch import nn, optim
 from torch.utils.data import DataLoader, ConcatDataset
 from torchvision import transforms
 from models.resnet import ResNet, ResBlock, ResBottleneckBlock
-from dataloader import FlowersDataset
+from dataset import FlowersDataset
 import utils
 
 # TODO: Data normalization (may require offline data augmentation); K-fold cross validation; Save log for visualization
@@ -111,7 +111,7 @@ class Trainer():
                 f'Epoch {t+1} ({utils.current_time()})\n-------------------------------')
             self.train()
             self.eval()
-            if (t+1) % self.config["save_pth_epoches"] == 0:
+            if (t+1) % self.config["save_pth_epochs"] == 0:
                 pth_path = os.path.join(self.save_path, f'{str(t+1)}.pth')
                 torch.save(self.model.state_dict(), pth_path)
         pth_path = os.path.join(self.save_path, 'latest.pth')
