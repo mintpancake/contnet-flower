@@ -1,7 +1,7 @@
 import numpy as np
 import os, pdb
 
-all_images = os.listdir(".")
+all_images = os.listdir("./raw")
 all_images = [i for i in all_images if "jpg" in i]
 all_images = sorted(all_images)
 # pdb.set_trace()
@@ -24,7 +24,7 @@ for class_images in train_images:
     for img in class_images:
         class_i = "class_" + str(cnt)
         os.makedirs(f"train/{class_i}", exist_ok=True)
-        os.system(f"cp {img} train/{class_i}")
+        os.system(f"cp raw/{img} train/{class_i}")
     print("train", class_i)
     cnt += 1
 
@@ -33,6 +33,6 @@ for class_images in test_images:
     for img in class_images:
         class_i = "class_" + str(cnt)
         os.makedirs(f"test/{class_i}", exist_ok=True)
-        os.system(f"cp {img} test/{class_i}")
+        os.system(f"cp raw/{img} test/{class_i}")
     print("test", class_i)
     cnt += 1
