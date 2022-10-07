@@ -135,7 +135,7 @@ class Trainer():
         # save the accuracy info of epochs to acc log file
         if self.total_val_step % self.config["save_acc_log_steps"] == 0:
             writer.add_scalar('Training accuracy', val_acc, self.total_val_step)
-        # log
+        writer.close()
 
     def start(self):
         utils.ensure_dir(self.loss_log_path)
