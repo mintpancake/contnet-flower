@@ -27,7 +27,7 @@ os.makedirs("test", exist_ok=True)
 cnt = 0
 for class_images in train_images:
     for img in class_images:
-        class_i = "class_" + str(cnt)
+        class_i = "class_" + str(cnt).zfill(2)
         os.makedirs(f"train/{class_i}", exist_ok=True)
         os.system(f"cp raw/{img} train/{class_i}")
     print("train", class_i)
@@ -36,7 +36,7 @@ for class_images in train_images:
 cnt = 0
 for class_images in val_images:
     for img in class_images:
-        class_i = "class_" + str(cnt)
+        class_i = "class_" + str(cnt).zfill(2)
         os.makedirs(f"val/{class_i}", exist_ok=True)
         os.system(f"cp raw/{img} val/{class_i}")
     print("val", class_i)
@@ -45,7 +45,7 @@ for class_images in val_images:
 cnt = 0
 for class_images in test_images:
     for img in class_images:
-        class_i = "class_" + str(cnt)
+        class_i = "class_" + str(cnt).zfill(2)
         os.makedirs(f"test/{class_i}", exist_ok=True)
         os.system(f"cp raw/{img} test/{class_i}")
     print("test", class_i)
