@@ -9,6 +9,8 @@ from models.resnet import ResNet, ResBlock, ResBottleneckBlock
 from dataset import FlowersDataset
 import utils
 
+from torch.utils.tensorboard import SummaryWriter
+
 # TODO: Data normalization (may require offline data augmentation); Save log for visualization
 
 
@@ -16,7 +18,8 @@ class Trainer():
     def __init__(self, config_path, data_path, save_path, log_path):
         self.config = utils.load_config(config_path)
         self.save_path = os.path.join(save_path, f'{utils.current_time()}')
-        self.log_path = os.path.join(log_path, f'{utils.current_time()}')
+        self.loss_log_path = os.path.join(log_path, 'loss/', f'{utils.current_time()}')
+        self.acc_log_path = os.path.join(log_path, 'acc/', f'{utils.current_time()}')
         self.train_meta_path = os.path.join(data_path, 'meta/train.txt')
         self.eval_meta_path = os.path.join(data_path, 'meta/val.txt')
         self.device = 'cuda' if torch.cuda.is_available() else 'cpu'
@@ -85,6 +88,7 @@ class Trainer():
         return ConcatDataset([transformed_dataset1, transformed_dataset2, transformed_dataset3])
 
     def train(self):
+        writer = SummaryWriter(self.loss_log_path)
         self.model.train()
         size = len(self.train_loader.dataset)
         for batch, (img, label) in enumerate(self.train_loader):
@@ -98,11 +102,14 @@ class Trainer():
                 loss_val, curr = loss.item(), batch*len(img)
                 print(f'loss: {loss_val:>7f}  [{curr:>5d}/{size:>5d}]')
             self.total_train_step += 1
-            if self.total_train_step % self.config["save_log_steps"] == 0:
-                # Save log
+            # save the loss info of steps to loss log file
+            if self.total_train_step % self.config["save_loss_log_steps"] == 0:
+                writer.add_scalar('Training loss', loss.item(), self.total_train_step)
                 pass
+        writer.close()
 
     def eval(self):
+        writer = SummaryWriter(self.acc_log_path)
         self.model.eval()
         size = len(self.val_loader.dataset)
         loss_fn = nn.CrossEntropyLoss(reduction='sum').to(self.device)
@@ -125,10 +132,14 @@ class Trainer():
               f'  Avg accu: {val_acc:>8f} \n'
               f'      Time: {(self.end_time - self.start_time):>8f} \n')
         self.total_val_step += 1
+        # save the accuracy info of epochs to acc log file
+        if self.total_val_step % self.config["save_acc_log_steps"] == 0:
+            writer.add_scalar('Training accuracy', val_acc, self.total_val_step)
         # log
 
     def start(self):
-        utils.ensure_dir(self.log_path)
+        utils.ensure_dir(self.loss_log_path)
+        utils.ensure_dir(self.acc_log_path)
         utils.ensure_dir(self.save_path)
         print(f"Training on {self.device}...")
         self.start_time = time.time()

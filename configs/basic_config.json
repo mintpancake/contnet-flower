@@ -18,6 +18,7 @@
     "shuffle": true,
     "drop_last": false,
     "print_loss_batches": 1,
-    "save_log_steps": 200,
+    "save_loss_log_steps": 1,
+    "save_acc_log_steps": 1,
     "save_pth_epochs": 1
 }
