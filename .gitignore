@@ -133,5 +133,6 @@ dmypy.json
 dev/
 logs/
 checkpoints/
+*.pth
 *.jpg
 *dev*.py

@@ -1,4 +1,3 @@
-from importlib.util import set_loader
 import torch
 from torch.utils.data import Dataset
 from torchvision import io

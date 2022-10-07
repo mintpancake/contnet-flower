@@ -11,11 +11,11 @@
         "useBottleneck": false,
         "outputs": 17
     },
-    "batch_size": 200,
+    "batch_size": 136,
     "learning_rate": 1e-3,
     "epochs": 10,
     "weight_decay": 0,
-    "shuffle": false,
+    "shuffle": true,
     "drop_last": false,
     "print_loss_batches": 1,
     "save_log_steps": 200,

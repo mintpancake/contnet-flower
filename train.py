@@ -1,4 +1,5 @@
 import os
+import time
 import argparse
 import torch
 from torch import nn, optim
@@ -8,7 +9,7 @@ from models.resnet import ResNet, ResBlock, ResBottleneckBlock
 from dataset import FlowersDataset
 import utils
 
-# TODO: Data normalization (may require offline data augmentation); K-fold cross validation; Save log for visualization
+# TODO: Data normalization (may require offline data augmentation); Save log for visualization
 
 
 class Trainer():
@@ -16,23 +17,27 @@ class Trainer():
         self.config = utils.load_config(config_path)
         self.save_path = os.path.join(save_path, f'{utils.current_time()}')
         self.log_path = os.path.join(log_path, f'{utils.current_time()}')
-        self.train_meta_path = os.path.join(data_path, 'meta/train')
-        self.eval_meta_path = None
+        self.train_meta_path = os.path.join(data_path, 'meta/train.txt')
+        self.eval_meta_path = os.path.join(data_path, 'meta/val.txt')
         self.device = 'cuda' if torch.cuda.is_available() else 'cpu'
-        self.train_data = self.get_dataset()
-        self.val_data = None
+        self.train_data = self.get_dataset(self.train_meta_path)
+        self.val_data = FlowersDataset(meta_file=self.eval_meta_path, transform=transforms.Compose(
+            [transforms.ToPILImage(), transforms.Resize([224, 224]), transforms.ToTensor()]))
         self.train_loader = DataLoader(
             self.train_data, batch_size=self.config["batch_size"], shuffle=self.config["shuffle"], drop_last=self.config["drop_last"])
-        self.val_loader = None
+        self.val_loader = DataLoader(
+            self.val_data, batch_size=self.config["batch_size"], shuffle=False, drop_last=False)
         self.model = ResNet(self.config["model"]["in_channels"], eval(self.config["model"]["resblock"]), self.config["model"]["repeat"],
                             self.config["model"]["useBottleneck"], self.config["model"]["outputs"]).to(self.device)
-        self.loss_fn = nn.CrossEntropyLoss().to(self.device)
+        self.loss_fn = nn.CrossEntropyLoss(reduction='mean').to(self.device)
         self.optimizer = optim.Adam(
             self.model.parameters(), lr=self.config["learning_rate"], weight_decay=self.config["weight_decay"])
         self.total_train_step = 0
         self.total_val_step = 0
+        self.start_time = 0.0
+        self.end_time = 0.0
 
-    def get_dataset(self):
+    def get_dataset(self, meta_path):
         # https://pytorch.org/vision/stable/transforms.html
         torch.manual_seed(7)
         transform1 = transforms.Compose([
@@ -48,7 +53,7 @@ class Trainer():
             transforms.Normalize(mean=[0.0, 0.0, 0.0], std=[1.0, 1.0, 1.0])
         ])
         transformed_dataset1 = FlowersDataset(
-            meta_file='data/flowers/meta/train.txt', transform=transform1)
+            meta_file=meta_path, transform=transform1)
         torch.manual_seed(17)
         transform2 = transforms.Compose([
             transforms.ToPILImage(),
@@ -62,7 +67,7 @@ class Trainer():
             transforms.Normalize(mean=[0.0, 0.0, 0.0], std=[1.0, 1.0, 1.0])
         ])
         transformed_dataset2 = FlowersDataset(
-            meta_file='data/flowers/meta/train.txt', transform=transform2)
+            meta_file=meta_path, transform=transform2)
         torch.manual_seed(27)
         transform3 = transforms.Compose([
             transforms.ToPILImage(),
@@ -76,7 +81,7 @@ class Trainer():
             transforms.Normalize(mean=[0.0, 0.0, 0.0], std=[1.0, 1.0, 1.0])
         ])
         transformed_dataset3 = FlowersDataset(
-            meta_file='data/flowers/meta/train.txt', transform=transform3)
+            meta_file=meta_path, transform=transform3)
         return ConcatDataset([transformed_dataset1, transformed_dataset2, transformed_dataset3])
 
     def train(self):
@@ -84,8 +89,8 @@ class Trainer():
         size = len(self.train_loader.dataset)
         for batch, (img, label) in enumerate(self.train_loader):
             img, label = img.to(self.device), label.to(self.device)
-            pred_label = self.model(img)
-            loss = self.loss_fn(pred_label, label)
+            pred_vec = self.model(img)
+            loss = self.loss_fn(pred_vec, label)
             loss.backward()
             self.optimizer.step()
             self.optimizer.zero_grad()
@@ -99,16 +104,37 @@ class Trainer():
 
     def eval(self):
         self.model.eval()
+        size = len(self.val_loader.dataset)
+        loss_fn = nn.CrossEntropyLoss(reduction='sum').to(self.device)
+        val_loss = 0.0
+        val_acc = 0.0
         with torch.no_grad():
-            pass
+            for img, label in self.val_loader:
+                img, label = img.to(self.device), label.to(self.device)
+                pred_vec = self.model(img)
+                loss = loss_fn(pred_vec, label)
+                val_loss += loss
+                pred_label = pred_vec.argmax(dim=1)
+                val_acc += (pred_label == label).float().sum()
+
+        val_loss /= size
+        val_acc /= size
+        self.end_time = time.time()
+        print(f'Test error: \n'
+              f'  Avg loss: {val_loss:>8f} \n'
+              f'  Avg accu: {val_acc:>8f} \n'
+              f'      Time: {(self.end_time - self.start_time):>8f} \n')
+        self.total_val_step += 1
+        # log
 
     def start(self):
         utils.ensure_dir(self.log_path)
         utils.ensure_dir(self.save_path)
         print(f"Training on {self.device}...")
+        self.start_time = time.time()
         for t in range(self.config["epochs"]):
             print(
-                f'Epoch {t+1} ({utils.current_time()})\n-------------------------------')
+                f'Epoch {t+1} ({utils.current_time()})\n-----------------------------')
             self.train()
             self.eval()
             if (t+1) % self.config["save_pth_epochs"] == 0:

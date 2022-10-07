@@ -20,4 +20,4 @@ def update_config(path, config):
         json.dump(config, json_file, indent=4)
 
 def current_time():
-    return datetime.now().strftime("%d-%m-%Y-%H-%M-%S")
+    return datetime.now().strftime("%Y-%m-%d-%H-%M-%S")
