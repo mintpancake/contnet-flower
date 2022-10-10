@@ -35,7 +35,7 @@ torch.manual_seed(27)
 transform3 = transforms.Compose([
     transforms.ToPILImage(),
     transforms.Resize([224, 224]),
-    transforms.ColorJitter(brightness=0.5, contrast=0.5, saturation=0.5, hue=0.5),
+    transforms.ColorJitter(brightness=0.1, contrast=0.1, saturation=0.1, hue=0.02),
     transforms.ToTensor()
 ])
 transformed_dataset3 = FlowersDataset(meta_file=train_meta_path, transform=transform3)
@@ -59,6 +59,8 @@ for batch, (img, label) in enumerate(train_loader):
     # Mean over batch, height and width, but not over the channels
     channels_sum += torch.mean(img, dim=[0,2,3])
     channels_squared_sum += torch.mean(img**2, dim=[0,2,3])
+    print(img)
+    exit()
     
 mean = channels_sum / len(transformed_dataset)
 
@@ -67,16 +69,6 @@ std = (channels_squared_sum / len(transformed_dataset) - mean ** 2) ** 0.5
 
 print(f'---mean: {mean}---')
 print(f'---std: {std}---')
-
-normalization = transforms.Normalize(mean, std)
-channels_sum = 0
-for batch, (img, label) in enumerate(train_loader):
-    img = normalization(img)
-    channels_sum += torch.mean(img, dim=[0,2,3])
-mean = channels_sum / len(transformed_dataset)
-
-print(f'---Normalized {len(transformed_dataset)} images---')
-print(f'---mean: {mean}---')
 
 # save the images and generate the meta data
 os.makedirs(transformed_img_path, exist_ok=True)
