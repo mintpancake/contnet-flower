@@ -1,19 +1,19 @@
 {
     "model": {
         "in_channels": 3,
-        "resblock": "ResBlock",
+        "resblock": "ResBottleneckBlock",
         "repeat": [
-            2,
-            2,
-            2,
-            2
+            3,
+            4,
+            6,
+            3
         ],
-        "useBottleneck": false,
+        "useBottleneck": true,
         "outputs": 17
     },
     "batch_size": 136,
     "learning_rate": 1e-3,
-    "epochs": 10,
+    "epochs": 200,
     "weight_decay": 0,
     "shuffle": true,
     "drop_last": false,
