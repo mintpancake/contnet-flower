@@ -11,15 +11,15 @@
         "useBottleneck": true,
         "outputs": 17
     },
-    "batch_size": 136,
-    "learning_rate": 1e-3,
-    "epochs": 200,
+    "batch_size": 17,
+    "learning_rate": 1e-2,
+    "epochs": 100,
     "weight_decay": 0,
     "shuffle": true,
     "drop_last": false,
-    "print_loss_batches": 1,
+    "print_loss_batches": 100,
     "save_loss_log_steps": 1,
     "save_acc_log_steps": 1,
     "save_f1_log_steps": 1,
-    "save_pth_epochs": 1
+    "save_pth_epochs": 20
 }
