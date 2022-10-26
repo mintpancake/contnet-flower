@@ -8,7 +8,8 @@ from torchvision import transforms, io
 from models.resnet import ResNet, ResBlock, ResBottleneckBlock
 from dataset import FlowersDataset
 import utils
-from PIL import Image
+from torchmetrics import F1Score   
+
 
 from torch.utils.tensorboard import SummaryWriter
 
@@ -20,6 +21,8 @@ class Trainer():
             log_path, 'loss/', f'{utils.current_time()}')
         self.acc_log_path = os.path.join(
             log_path, 'acc/', f'{utils.current_time()}')
+        self.f1_log_path = os.path.join(
+            log_path, 'f1/', f'{utils.current_time()}')
         self.train_meta_path = os.path.join(
             data_path, 'transformed/meta/train.txt')
         self.eval_meta_path = os.path.join(data_path, 'meta/val.txt')
@@ -44,6 +47,7 @@ class Trainer():
         self.end_time = 0.0
         self.loss_writer = SummaryWriter(self.loss_log_path)
         self.acc_writer = SummaryWriter(self.acc_log_path)
+        self.f1_writer = SummaryWriter(self.f1_log_path)
 
     def train(self):
         self.model.train()
@@ -71,6 +75,8 @@ class Trainer():
         loss_fn = nn.CrossEntropyLoss(reduction='sum').to(self.device)
         val_loss = 0.0
         val_acc = 0.0
+        labels = torch.IntTensor([]).to(self.device)
+        preds = torch.IntTensor([]).to(self.device)
         with torch.no_grad():
             for img, label in self.val_loader:
                 img, label = img.to(self.device), label.to(self.device)
@@ -79,19 +85,32 @@ class Trainer():
                 val_loss += loss
                 pred_label = pred_vec.argmax(dim=1)
                 val_acc += (pred_label == label).float().sum()
+                labels = torch.cat((labels, label), 0)
+                preds = torch.cat((preds, pred_label), 0)
 
         val_loss /= size
         val_acc /= size
+
+        # calculate F1 score
+        f1_score = F1Score(num_classes=17, average='macro').to(self.device)
+        f1 = f1_score(preds, labels)
+
         self.end_time = time.time()
         print(f'Test error: \n'
               f'  Avg loss: {val_loss:>8f} \n'
               f'  Avg accu: {val_acc:>8f} \n'
+              f'  F1 score: {f1:>8f} \n'
               f'      Time: {(self.end_time - self.start_time):>8f} \n')
         self.total_val_step += 1
         # save the accuracy info of epochs to acc log file
         if self.total_val_step % self.config["save_acc_log_steps"] == 0:
             self.acc_writer.add_scalar(
                 'Training accuracy', val_acc, self.total_val_step)
+
+        # save the F1 score to f1 log file
+        if self.total_val_step % self.config["save_f1_log_steps"] == 0:
+            self.f1_writer.add_scalar(
+                'F1 score', f1, self.total_val_step)
 
     def start(self):
         utils.ensure_dir(self.loss_log_path)
@@ -111,6 +130,7 @@ class Trainer():
         torch.save(self.model.state_dict(), pth_path)
         self.loss_writer.close()
         self.acc_writer.close()
+        self.f1_writer.close()
         print(
             f'Completed {self.config["epochs"]} epoches; saved in "{self.save_path}"')
 
