@@ -14,7 +14,7 @@ from torch.utils.tensorboard import SummaryWriter
 class Trainer():
     def __init__(self, config_path, data_path, save_path, log_path):
         self.config = utils.load_config(config_path)
-        self.save_path = os.path.join(save_path, f'{utils.current_time()}')
+        self.save_path = save_path
         self.loss_log_path = os.path.join(
             log_path, 'loss/', f'{utils.current_time()}')
         self.acc_log_path = os.path.join(
@@ -136,13 +136,13 @@ class Trainer():
 if __name__ == '__main__':
     parser = argparse.ArgumentParser(description="Model trainer")
     parser.add_argument(
-        '--config', type=str, default="configs/basic_config.json", help="Config path")
+        '--config', type=str, default="configs/basic_config_50.json", help="Config path")
     parser.add_argument(
         '--data', type=str, default="data/flowers", help="Data directory")
     parser.add_argument(
-        '--save', type=str, default='checkpoints', help="Checkpoint save directory")
+        '--save', type=str, default='checkpoints/2/17', help="Checkpoint save directory")
     parser.add_argument(
-        '--log', type=str, default="logs", help="Log directory")
+        '--log', type=str, default="logs/2/17", help="Log directory")
     args = parser.parse_args()
     trainer = Trainer(args.config, args.data, args.save, args.log)
     trainer.start()
