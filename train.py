@@ -9,11 +9,6 @@ from models.resnet import ResNet, ResBlock, ResBottleneckBlock
 from dataset import FlowersDataset
 import utils
 from torchmetrics import F1Score   
-
-<<<<<<< HEAD
-=======
-
->>>>>>> main
 from torch.utils.tensorboard import SummaryWriter
 
 class Trainer():
