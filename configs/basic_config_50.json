@@ -1,0 +1,25 @@
+{
+    "model": {
+        "in_channels": 3,
+        "resblock": "ResBottleneckBlock",
+        "repeat": [
+            3,
+            4,
+            6,
+            3
+        ],
+        "useBottleneck": true,
+        "outputs": 17
+    },
+    "batch_size": 136,
+    "learning_rate": 1e-3,
+    "epochs": 200,
+    "weight_decay": 0,
+    "shuffle": true,
+    "drop_last": false,
+    "print_loss_batches": 1,
+    "save_loss_log_steps": 1,
+    "save_acc_log_steps": 1,
+    "save_f1_log_steps": 1,
+    "save_pth_epochs": 1
+}
