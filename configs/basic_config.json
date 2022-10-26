@@ -20,5 +20,6 @@
     "print_loss_batches": 1,
     "save_loss_log_steps": 1,
     "save_acc_log_steps": 1,
+    "save_f1_log_steps": 1,
     "save_pth_epochs": 1
 }
