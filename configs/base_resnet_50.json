@@ -21,7 +21,7 @@
     "save_loss_log_steps": 1,
     "save_acc_log_steps": 1,
     "save_f1_log_steps": 1,
-    "save_pth_epochs": 20,
+    "save_pth_epochs": 10,
     "disable_augmentation": false,
     "optimizer": "Adam",
     "l2_regularization": 0
