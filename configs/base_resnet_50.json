@@ -1,4 +1,5 @@
 {
+    "model_type": "resnet",
     "model": {
         "in_channels": 3,
         "resblock": "ResBottleneckBlock",
@@ -11,15 +12,17 @@
         "useBottleneck": true,
         "outputs": 17
     },
-    "batch_size": 17,
-    "learning_rate": 1e-2,
+    "batch_size": 68,
+    "learning_rate": 1e-4,
     "epochs": 100,
-    "weight_decay": 0,
     "shuffle": true,
     "drop_last": false,
     "print_loss_batches": 100,
     "save_loss_log_steps": 1,
     "save_acc_log_steps": 1,
     "save_f1_log_steps": 1,
-    "save_pth_epochs": 20
+    "save_pth_epochs": 20,
+    "disable_augmentation": false,
+    "optimizer": "Adam",
+    "l2_regularization": 0
 }
