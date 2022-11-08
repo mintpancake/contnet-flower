@@ -2,14 +2,17 @@ import os
 import time
 import argparse
 import torch
-from torch import nn, optim
-from torch.utils.data import DataLoader, ConcatDataset
-from torchvision import transforms, io
+from torch import nn
+from torch.optim import SGD, Adam, RMSprop
+from torch.utils.data import DataLoader
+from torchvision import transforms
 from models.resnet import ResNet, ResBlock, ResBottleneckBlock
+from models.content import ConTNet
 from dataset import FlowersDataset
 import utils
-from torchmetrics import F1Score   
+from torchmetrics import F1Score
 from torch.utils.tensorboard import SummaryWriter
+
 
 class Trainer():
     def __init__(self, config_path, data_path, save_path, log_path):
@@ -21,8 +24,11 @@ class Trainer():
             log_path, 'acc/', f'{utils.current_time()}')
         self.f1_log_path = os.path.join(
             log_path, 'f1/', f'{utils.current_time()}')
-        self.train_meta_path = os.path.join(
-            data_path, 'transformed/meta/train.txt')
+        if self.config["disable_augmentation"]:
+            self.train_meta_path = os.path.join(data_path, 'meta/train.txt')
+        else:
+            self.train_meta_path = os.path.join(
+                data_path, 'transformed/meta/train.txt')
         self.eval_meta_path = os.path.join(data_path, 'meta/val.txt')
         self.device = 'cuda' if torch.cuda.is_available() else 'cpu'
         self.train_data = FlowersDataset(meta_file=self.train_meta_path, transform=transforms.Compose(
@@ -34,11 +40,15 @@ class Trainer():
             self.train_data, batch_size=self.config["batch_size"], shuffle=self.config["shuffle"], drop_last=self.config["drop_last"])
         self.val_loader = DataLoader(
             self.val_data, batch_size=self.config["batch_size"], shuffle=False, drop_last=False)
-        self.model = ResNet(self.config["model"]["in_channels"], eval(self.config["model"]["resblock"]), self.config["model"]["repeat"],
-                            self.config["model"]["useBottleneck"], self.config["model"]["outputs"]).to(self.device)
+        if self.config["model_type"] == 'resnet':
+            self.model = ResNet(self.config["model"]["in_channels"], eval(self.config["model"]["resblock"]), self.config["model"]["repeat"],
+                                self.config["model"]["useBottleneck"], self.config["model"]["outputs"]).to(self.device)
+        else:
+            self.model = ConTNet(mlp_dim=self.config["model"]["mlp_dim"], head_num=self.config["model"]["head_num"], dropout=self.config["model"]["dropout"],
+                                 inplanes=self.config["model"]["inplanes"], layers=self.config["model"]["layers"], last_dropout=self.config["model"]["last_dropout"]).to(self.device)
         self.loss_fn = nn.CrossEntropyLoss(reduction='mean').to(self.device)
-        self.optimizer = optim.Adam(
-            self.model.parameters(), lr=self.config["learning_rate"], weight_decay=self.config["weight_decay"])
+        self.optimizer = eval(self.config["optimizer"])(
+            self.model.parameters(), lr=self.config["learning_rate"], weight_decay=self.config["l2_regularization"])
         self.total_train_step = 0
         self.total_val_step = 0
         self.start_time = 0.0
@@ -136,13 +146,13 @@ class Trainer():
 if __name__ == '__main__':
     parser = argparse.ArgumentParser(description="Model trainer")
     parser.add_argument(
-        '--config', type=str, default="configs/basic_config_50.json", help="Config path")
+        '--config', type=str, default="configs/base_resnet_18.json", help="Config path")
     parser.add_argument(
         '--data', type=str, default="data/flowers", help="Data directory")
     parser.add_argument(
-        '--save', type=str, default='checkpoints/2/17', help="Checkpoint save directory")
+        '--save', type=str, default='checkpoints/temp', help="Checkpoint save directory")
     parser.add_argument(
-        '--log', type=str, default="logs/2/17", help="Log directory")
+        '--log', type=str, default="logs/temp", help="Log directory")
     args = parser.parse_args()
     trainer = Trainer(args.config, args.data, args.save, args.log)
     trainer.start()
